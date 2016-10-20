@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<assembly>
+	<id>to-zip</id>
+	<formats>
+		<format>zip</format>
+	</formats>
+	<includeBaseDirectory>false</includeBaseDirectory>
+	<fileSets>
+		<fileSet>
+			<directory>ant</directory>
+			<outputDirectory></outputDirectory>
+			<useDefaultExcludes>true</useDefaultExcludes>
+			<includes>
+				<include>lib-ext/**</include>
+				<include>xsl/**</include>
+				<include>build.xml</include>
+			</includes>
+		</fileSet>
+	</fileSets>
+</assembly>
