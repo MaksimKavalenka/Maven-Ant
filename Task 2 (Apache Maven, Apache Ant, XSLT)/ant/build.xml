@@ -1,4 +1,4 @@
-<project basedir="." default="default-end">
+<project xmlns:lib="antlib:by.training" basedir="." default="default-end">
 
 	<property name="in.dir" location="${basedir}/in"/>
 	<property name="lib.ext.dir" location="${basedir}/lib-ext"/>
@@ -10,7 +10,6 @@
 	<property name="temp.in.dir" location="${temp.dir}/in"/>
 	<property name="temp.out.dir" location="${temp.dir}/out"/>
 
-	<property name="input.file" location="${temp.in.dir}/input.html"/>
 	<property name="input.package.file" location="${in.dir}/input.zip"/>
 	<property name="log.file" location="${log.dir}/log.txt"/>
 	<property name="output.file" location="${temp.out.dir}/output.html"/>
@@ -19,11 +18,15 @@
 
 	<property name="unpack.all">false</property>
 
+	<tstamp>
+		<format property="job.id" pattern="yyyyMMddHHmmss"/>
+	</tstamp>
+
 	<path id="lib-jars">
-		<fileset dir="${lib.ext.dir}">
-			<include name="*.jar"/>
-		</fileset>
+		<fileset dir="${lib.ext.dir}" includes="*.jar"/>
 	</path>
+
+	<taskdef uri="antlib:by.training" resource="by/training/antlib.xml" classpathref="lib-jars" loaderref="ant.coreLoader"/>
 
 	<target name="help">
 		<echo message="Available targets:"/>
@@ -32,6 +35,7 @@
 		<echo message="unpack-input-package - Unzips package in input folder and copies only files (flattern) to 'ant/temp/in'."/>
 		<echo message="html-unpack-input-package - Copy plain input HTML files to 'ant/temp/in'."/>
 		<echo message="prepare-input - Depends on 'init' and 'html-unpack-input-package' targets."/>
+		<echo message="rename-files - Rename files."/>
 		<echo message="convert-metadata - Invokes XSLT transformation of 'input.html' file according to 'html-metadata-transform.xsl' rules. Depends on 'prepare-input' target."/>
 		<echo message="create-package - Creates ZIP package with transformed HTML file and copies it to 'ant/out'. Depends on 'convert-metadata' target."/>
 	</target>
@@ -47,38 +51,46 @@
 	</target>
 
 	<target name="unpack-input-package" if="${unpack.all}">
-		<unzip src="${input.package.file}" dest="${in.dir}"/>
 		<mkdir dir="${temp.in.dir}"/>
-		<copy todir="${temp.in.dir}" >
+		<unzip src="${input.package.file}" dest="${temp.in.dir}"/>
+	</target>
+
+	<target name="html-unpack-input-package" unless="${unpack.all}">
+		<mkdir dir="${temp.in.dir}"/>
+		<copy todir="${temp.in.dir}">
 			<fileset dir="${in.dir}">
-				<include name="**/*.*"/>
+				<include name="*.xml"/>
+				<include name="*.html"/>
+				<include name="*.xhtml"/>
 			</fileset>
 			<mapper type="flatten"/>
 		</copy>
 	</target>
 
-	<target name="html-unpack-input-package" unless="${unpack.all}">
-		<mkdir dir="${temp.in.dir}"/>
-		<unzip src="${input.package.file}" dest="${temp.in.dir}">
-			<patternset>
-				<include name="**/*.html"/>
-			</patternset>
-			<mapper type="flatten"/>
-		</unzip>
-	</target>
-
 	<target name="prepare-input" depends="init, unpack-input-package, html-unpack-input-package"/>
 
-	<target name="convert-metadata" depends="prepare-input">
-		<fail message="File ${input.file} does not exist">
+	<target name="rename-files">
+		<lib:rename-files destDir="${temp.in.dir}" jobId="${job.id}">
+			<fileset dir="${temp.in.dir}">
+				<include name="*.xml"/>
+				<include name="*.html"/>
+				<include name="*.xhtml"/>
+			</fileset>
+		</lib:rename-files>
+	</target>
+
+	<target name="convert-metadata" depends="prepare-input, rename-files">
+		<fail message="Permissible file(s) is/are not found">
 			<condition>
 				<not>
-					<available file="${input.file}" />
+					<resourcecount count="1">
+						<fileset dir="${temp.in.dir}" includes="*.xml,*.html,*.xhtml"/>
+					</resourcecount>
 				</not>
 			</condition>
 		</fail>
 		<mkdir dir="${temp.out.dir}"/>
-		<xslt in="${input.file}" out="${output.file}" style="${xsl.file}">
+		<xslt basedir="${temp.in.dir}" destdir="${temp.out.dir}" extension=".html" style="${xsl.file}">
 			<classpath refid="lib-jars"/>
 		</xslt>
 	</target>

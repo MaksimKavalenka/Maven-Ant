@@ -13,8 +13,11 @@
 		<saxon.he.version>9.7.0-8</saxon.he.version>
 		<ant.contrib.version>1.0b3</ant.contrib.version>
 		<ant.version>1.9.7</ant.version>
+
 		<maven.clean.plugin.version>3.0.0</maven.clean.plugin.version>
 		<maven.dependency.plugin.version>2.10</maven.dependency.plugin.version>
+		<maven.compiler.plugin.version>3.5.1</maven.compiler.plugin.version>
+		<maven.resources.plugin.version>3.0.1</maven.resources.plugin.version>
 		<maven.assembly.plugin.version>2.6</maven.assembly.plugin.version>
 
 		<ant.lib.ext.dir>${basedir}/ant/lib-ext</ant.lib.ext.dir>
@@ -84,6 +87,16 @@
 
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>${maven.compiler.plugin.version}</version>
+				<configuration>
+					<source>1.8</source>
+					<target>1.8</target>
+				</configuration>
+			</plugin>
+
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-assembly-plugin</artifactId>
 				<version>${maven.assembly.plugin.version}</version>
 				<configuration>
@@ -98,6 +111,51 @@
 						<goals>
 							<goal>single</goal>
 						</goals>
+					</execution>
+				</executions>
+			</plugin>
+
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-assembly-plugin</artifactId>
+				<version>${maven.assembly.plugin.version}</version>
+				<configuration>
+					<finalName>antlib</finalName>
+					<descriptors>
+						<descriptor>antlib-rename-files-jar.xml</descriptor>
+					</descriptors>
+					<outputDirectory>${project.build.directory}/antlibs</outputDirectory>
+				</configuration>
+				<executions>
+					<execution>
+						<id>assembly</id>
+						<phase>package</phase>
+						<goals>
+							<goal>single</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-resources-plugin</artifactId>
+				<version>${maven.resources.plugin.version}</version>
+				<executions>
+					<execution>
+						<id>copy-resources</id>
+						<phase>package</phase>
+						<goals>
+							<goal>copy-resources</goal>
+						</goals>
+						<configuration>
+							<outputDirectory>${ant.lib.ext.dir}</outputDirectory>
+							<resources>          
+								<resource>
+									<directory>${project.build.directory}/antlibs</directory>
+								</resource>
+							</resources>              
+						</configuration>            
 					</execution>
 				</executions>
 			</plugin>
